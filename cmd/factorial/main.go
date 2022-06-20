@@ -10,7 +10,7 @@ import (
 
 func main() {
 	var text string
-	fmt.Println("enter number: ")
+	fmt.Print("enter number: ")
 	fmt.Scanln(&text)
 	number, err := strconv.Atoi(text)
 	if err != nil {
