@@ -13,7 +13,7 @@ import (
 var ErrUnexpectedEquation = errors.New("unexpected equation")
 
 type Equation struct {
-	Monomials []*Monomial
+	MonomialsGroups []*MonomialsGroup
 }
 
 func Parse(equation string) (result *Equation, err error) {
@@ -47,7 +47,7 @@ func Parse(equation string) (result *Equation, err error) {
 		leftSide = append(leftSide, x)
 	}
 
-	result.Monomials = leftSide
+	result.AddGroup(newGroup().Add(leftSide...))
 	result.Simplify()
 	return result, nil
 }
@@ -111,41 +111,24 @@ func parseStr(s string) []*Monomial {
 	return result
 }
 
+// AddGroup adds a new monomials group
+func (e *Equation) AddGroup(g *MonomialsGroup) {
+	e.MonomialsGroups = append(e.MonomialsGroups, g)
+}
+
+// Simplify simplifies each of monomials group
 func (e *Equation) Simplify() {
-	var maxPower float64 = 0
-
-	// key is power, value is coefficient
-	monomials := make(map[float64]float64)
-
-	for _, m := range e.Monomials {
-		monomials[m.Power] += m.Coefficient
-
-		if m.Power > maxPower {
-			maxPower = m.Power
-		}
+	for _, g := range e.MonomialsGroups {
+		g.Simplify()
 	}
-
-	newMonomials := make([]*Monomial, 0)
-	for i := maxPower; i >= 0; i-- {
-		c, contains := monomials[i]
-		if !contains || c == 0 {
-			continue
-		}
-		newMonomials = append(newMonomials, &Monomial{
-			Power:       i,
-			Coefficient: c,
-		})
-	}
-
-	e.Monomials = newMonomials
 }
 
 // String implements fmt.Stringer
 func (e *Equation) String() string {
 	result := ""
-	for _, i := range e.Monomials {
-		result += i.String() + " "
+	for _, i := range e.MonomialsGroups {
+		result += i.String()
 	}
-	result = strings.TrimLeft(result, "+ -")
+
 	return fmt.Sprintf("%v = 0", result)
 }
